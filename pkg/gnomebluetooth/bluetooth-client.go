@@ -15,8 +15,6 @@ import (
 	"github.com/diamondburned/gotk4/pkg/gtk/v3"
 )
 
-// #cgo pkg-config: gnome-bluetooth-1.0
-// #cgo CFLAGS: -Wno-deprecated-declarations
 // #include <stdlib.h>
 // #include <glib-object.h>
 // extern void callbackDelete(gpointer);
@@ -33,6 +31,7 @@ func init() {
 // Client: <structname>BluetoothClient</structname> struct contains only private
 // fields and should not be directly accessed.
 type Client struct {
+	_ [0]func() // equal guard
 	*externglib.Object
 }
 
@@ -52,6 +51,11 @@ func marshalClienter(p uintptr) (interface{}, error) {
 
 // NewClient returns a reference to the Client singleton. Use g_object_unref()
 // when done with the object.
+//
+// The function returns the following values:
+//
+//    - client: Client object.
+//
 func NewClient() *Client {
 	var _cret *C.BluetoothClient // in
 
@@ -70,11 +74,10 @@ func NewClient() *Client {
 //
 // The function takes the following parameters:
 //
-//    - ctx: optional #GCancellable object, NULL to ignore.
+//    - ctx (optional): optional #GCancellable object, NULL to ignore.
 //    - path: object path on which to operate.
-//    - connect: whether try to connect or disconnect from services on a
-//    device.
-//    - callback to call when the connection is complete.
+//    - connect: whether try to connect or disconnect from services on a device.
+//    - callback (optional) to call when the connection is complete.
 //
 func (client *Client) ConnectService(ctx context.Context, path string, connect bool, callback gio.AsyncReadyCallback) {
 	var _arg0 *C.BluetoothClient    // out
@@ -137,6 +140,11 @@ func (client *Client) ConnectServiceFinish(res gio.AsyncResulter) error {
 }
 
 // AdapterModel returns a TreeModelFilter with only adapters present.
+//
+// The function returns the following values:
+//
+//    - treeModel: TreeModel object.
+//
 func (client *Client) AdapterModel() gtk.TreeModeller {
 	var _arg0 *C.BluetoothClient // out
 	var _cret *C.GtkTreeModel    // in
@@ -155,9 +163,13 @@ func (client *Client) AdapterModel() gtk.TreeModeller {
 		}
 
 		object := externglib.AssumeOwnership(objptr)
-		rv, ok := (externglib.CastObject(object)).(gtk.TreeModeller)
+		casted := object.WalkCast(func(obj externglib.Objector) bool {
+			_, ok := obj.(gtk.TreeModeller)
+			return ok
+		})
+		rv, ok := casted.(gtk.TreeModeller)
 		if !ok {
-			panic("object of type " + object.TypeFromInstance().String() + " is not gtk.TreeModeller")
+			panic("no marshaler for " + object.TypeFromInstance().String() + " matching gtk.TreeModeller")
 		}
 		_treeModel = rv
 	}
@@ -170,6 +182,11 @@ func (client *Client) AdapterModel() gtk.TreeModeller {
 // and will not follow the default adapter. Also note that due to the way
 // TreeModelFilter works, you will probably want to monitor signals on the
 // "child-model" TreeModel to monitor for changes.
+//
+// The function returns the following values:
+//
+//    - treeModel: TreeModel object.
+//
 func (client *Client) DeviceModel() gtk.TreeModeller {
 	var _arg0 *C.BluetoothClient // out
 	var _cret *C.GtkTreeModel    // in
@@ -188,9 +205,13 @@ func (client *Client) DeviceModel() gtk.TreeModeller {
 		}
 
 		object := externglib.AssumeOwnership(objptr)
-		rv, ok := (externglib.CastObject(object)).(gtk.TreeModeller)
+		casted := object.WalkCast(func(obj externglib.Objector) bool {
+			_, ok := obj.(gtk.TreeModeller)
+			return ok
+		})
+		rv, ok := casted.(gtk.TreeModeller)
 		if !ok {
-			panic("object of type " + object.TypeFromInstance().String() + " is not gtk.TreeModeller")
+			panic("no marshaler for " + object.TypeFromInstance().String() + " matching gtk.TreeModeller")
 		}
 		_treeModel = rv
 	}
@@ -205,6 +226,10 @@ func (client *Client) DeviceModel() gtk.TreeModeller {
 // The function takes the following parameters:
 //
 //    - fn: TreeModelFilterVisibleFunc.
+//
+// The function returns the following values:
+//
+//    - treeModel: TreeModel object.
 //
 func (client *Client) FilterModel(fn gtk.TreeModelFilterVisibleFunc) gtk.TreeModeller {
 	var _arg0 *C.BluetoothClient              // out
@@ -231,9 +256,13 @@ func (client *Client) FilterModel(fn gtk.TreeModelFilterVisibleFunc) gtk.TreeMod
 		}
 
 		object := externglib.AssumeOwnership(objptr)
-		rv, ok := (externglib.CastObject(object)).(gtk.TreeModeller)
+		casted := object.WalkCast(func(obj externglib.Objector) bool {
+			_, ok := obj.(gtk.TreeModeller)
+			return ok
+		})
+		rv, ok := casted.(gtk.TreeModeller)
 		if !ok {
-			panic("object of type " + object.TypeFromInstance().String() + " is not gtk.TreeModeller")
+			panic("no marshaler for " + object.TypeFromInstance().String() + " matching gtk.TreeModeller")
 		}
 		_treeModel = rv
 	}
@@ -243,6 +272,11 @@ func (client *Client) FilterModel(fn gtk.TreeModelFilterVisibleFunc) gtk.TreeMod
 
 // Model returns an unfiltered TreeModel representing the adapter and devices
 // available on the system.
+//
+// The function returns the following values:
+//
+//    - treeModel: TreeModel object.
+//
 func (client *Client) Model() gtk.TreeModeller {
 	var _arg0 *C.BluetoothClient // out
 	var _cret *C.GtkTreeModel    // in
@@ -261,18 +295,16 @@ func (client *Client) Model() gtk.TreeModeller {
 		}
 
 		object := externglib.AssumeOwnership(objptr)
-		rv, ok := (externglib.CastObject(object)).(gtk.TreeModeller)
+		casted := object.WalkCast(func(obj externglib.Objector) bool {
+			_, ok := obj.(gtk.TreeModeller)
+			return ok
+		})
+		rv, ok := casted.(gtk.TreeModeller)
 		if !ok {
-			panic("object of type " + object.TypeFromInstance().String() + " is not gtk.TreeModeller")
+			panic("no marshaler for " + object.TypeFromInstance().String() + " matching gtk.TreeModeller")
 		}
 		_treeModel = rv
 	}
 
 	return _treeModel
-}
-
-// ConnectDeviceRemoved signal is launched when a device gets removed from the
-// model.
-func (client *Client) ConnectDeviceRemoved(f func(device string)) externglib.SignalHandle {
-	return client.Connect("device-removed", f)
 }

@@ -11,8 +11,6 @@ import (
 	"github.com/diamondburned/gotk4/pkg/gtk/v3"
 )
 
-// #cgo pkg-config: gnome-bluetooth-1.0
-// #cgo CFLAGS: -Wno-deprecated-declarations
 // #include <stdlib.h>
 // #include <glib-object.h>
 import "C"
@@ -26,6 +24,7 @@ func init() {
 // SettingsWidget: <structname>BluetoothSettingsWidget</structname> struct
 // contains only private fields and should not be directly accessed.
 type SettingsWidget struct {
+	_ [0]func() // equal guard
 	gtk.Box
 }
 
@@ -64,6 +63,11 @@ func marshalSettingsWidgetter(p uintptr) (interface{}, error) {
 }
 
 // NewSettingsWidget returns a new SettingsWidget widget.
+//
+// The function returns the following values:
+//
+//    - settingsWidget: SettingsWidget widget.
+//
 func NewSettingsWidget() *SettingsWidget {
 	var _cret *C.GtkWidget // in
 
@@ -76,6 +80,10 @@ func NewSettingsWidget() *SettingsWidget {
 	return _settingsWidget
 }
 
+// The function returns the following values:
+//
+//    - ok: whether the default Bluetooth adapter is powered.
+//
 func (widget *SettingsWidget) DefaultAdapterPowered() bool {
 	var _arg0 *C.BluetoothSettingsWidget // out
 	var _cret C.gboolean                 // in
@@ -92,16 +100,4 @@ func (widget *SettingsWidget) DefaultAdapterPowered() bool {
 	}
 
 	return _ok
-}
-
-// ConnectAdapterStatusChanged signal is launched when the status of the adapter
-// changes (powered, available, etc.).
-func (widget *SettingsWidget) ConnectAdapterStatusChanged(f func()) externglib.SignalHandle {
-	return widget.Connect("adapter-status-changed", f)
-}
-
-// ConnectPanelChanged signal is launched when a link to another settings panel
-// is clicked.
-func (widget *SettingsWidget) ConnectPanelChanged(f func(panel string)) externglib.SignalHandle {
-	return widget.Connect("panel-changed", f)
 }

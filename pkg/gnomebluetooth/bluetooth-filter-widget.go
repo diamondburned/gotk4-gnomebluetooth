@@ -11,8 +11,6 @@ import (
 	"github.com/diamondburned/gotk4/pkg/gtk/v3"
 )
 
-// #cgo pkg-config: gnome-bluetooth-1.0
-// #cgo CFLAGS: -Wno-deprecated-declarations
 // #include <stdlib.h>
 // #include <glib-object.h>
 import "C"
@@ -24,6 +22,7 @@ func init() {
 }
 
 type FilterWidget struct {
+	_ [0]func() // equal guard
 	gtk.Box
 }
 
@@ -64,6 +63,14 @@ func marshalFilterWidgetter(p uintptr) (interface{}, error) {
 // NewFilterWidget creates a new FilterWidget which can be bound to a Chooser to
 // control filtering of that Chooser. Usually used in conjunction with a Chooser
 // which has the "has-internal-filter" property set to FALSE.
+//
+// The function returns the following values:
+//
+//    - filterWidget widget
+//
+//      Note: Must call bluetooth_filter_widget_bind_filter () to bind the
+//      FilterWidget to a Chooser.
+//
 func NewFilterWidget() *FilterWidget {
 	var _cret *C.GtkWidget // in
 

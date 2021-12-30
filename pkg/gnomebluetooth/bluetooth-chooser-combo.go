@@ -10,8 +10,6 @@ import (
 	"github.com/diamondburned/gotk4/pkg/gtk/v3"
 )
 
-// #cgo pkg-config: gnome-bluetooth-1.0
-// #cgo CFLAGS: -Wno-deprecated-declarations
 // #include <stdlib.h>
 // #include <glib-object.h>
 import "C"
@@ -27,6 +25,7 @@ func init() {
 const CHOOSER_COMBO_FIRST_DEVICE = "00:00:00:00:00:00"
 
 type ChooserCombo struct {
+	_ [0]func() // equal guard
 	gtk.Box
 }
 
@@ -64,7 +63,19 @@ func marshalChooserCombor(p uintptr) (interface{}, error) {
 	return wrapChooserCombo(externglib.ValueFromNative(unsafe.Pointer(p)).Object()), nil
 }
 
+// ConnectChooserCreated: signal is sent when a popup dialogue is created for
+// the user to select a device. This signal allows you to change the
+// configuration and filtering of the tree from its defaults.
+func (v *ChooserCombo) ConnectChooserCreated(f func(chooser *externglib.Object)) externglib.SignalHandle {
+	return v.Connect("chooser-created", f)
+}
+
 // NewChooserCombo returns a new ChooserCombo widget.
+//
+// The function returns the following values:
+//
+//    - chooserCombo: ChooserCombo widget.
+//
 func NewChooserCombo() *ChooserCombo {
 	var _cret *C.GtkWidget // in
 
@@ -75,11 +86,4 @@ func NewChooserCombo() *ChooserCombo {
 	_chooserCombo = wrapChooserCombo(externglib.Take(unsafe.Pointer(_cret)))
 
 	return _chooserCombo
-}
-
-// ConnectChooserCreated: signal is sent when a popup dialogue is created for
-// the user to select a device. This signal allows you to change the
-// configuration and filtering of the tree from its defaults.
-func (v *ChooserCombo) ConnectChooserCreated(f func(chooser *externglib.Object)) externglib.SignalHandle {
-	return v.Connect("chooser-created", f)
 }

@@ -2,7 +2,7 @@ module github.com/diamondburned/gotk4-gnomebluetooth
 
 go 1.17
 
-require github.com/diamondburned/gotk4 v0.0.3-0.20211210005627-b7feca8f66e8
+require github.com/diamondburned/gotk4 v0.0.3-0.20211229000402-97100df5ca16
 
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect

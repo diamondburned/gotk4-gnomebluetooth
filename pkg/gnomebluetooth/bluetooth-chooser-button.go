@@ -11,8 +11,6 @@ import (
 	"github.com/diamondburned/gotk4/pkg/gtk/v3"
 )
 
-// #cgo pkg-config: gnome-bluetooth-1.0
-// #cgo CFLAGS: -Wno-deprecated-declarations
 // #include <stdlib.h>
 // #include <glib-object.h>
 import "C"
@@ -28,12 +26,15 @@ func init() {
 // As of right now, interface overriding and subclassing is not supported
 // yet, so the interface currently has no use.
 type ChooserButtonOverrider interface {
+	// The function takes the following parameters:
+	//
 	ChooserCreated(chooser gtk.Widgetter)
 }
 
 // ChooserButton: <structname>BluetoothChooserButton</structname> struct
 // contains only private fields and should not be directly accessed.
 type ChooserButton struct {
+	_ [0]func() // equal guard
 	gtk.Button
 }
 
@@ -88,6 +89,11 @@ func marshalChooserButtonner(p uintptr) (interface{}, error) {
 }
 
 // NewChooserButton returns a new ChooserButton widget.
+//
+// The function returns the following values:
+//
+//    - chooserButton: ChooserButton widget.
+//
 func NewChooserButton() *ChooserButton {
 	var _cret *C.GtkWidget // in
 
@@ -101,6 +107,12 @@ func NewChooserButton() *ChooserButton {
 }
 
 // Available returns whether there is a powered Bluetooth adapter.
+//
+// The function returns the following values:
+//
+//    - ok: TRUE if there is a powered Bluetooth adapter available, and the
+//      button should be sensitive.
+//
 func (button *ChooserButton) Available() bool {
 	var _arg0 *C.BluetoothChooserButton // out
 	var _cret C.gboolean                // in
@@ -117,11 +129,4 @@ func (button *ChooserButton) Available() bool {
 	}
 
 	return _ok
-}
-
-// ConnectChooserCreated: signal is sent when a popup dialogue is created for
-// the user to select a device. This signal allows you to change the
-// configuration and filtering of the tree from its defaults.
-func (button *ChooserButton) ConnectChooserCreated(f func(chooser *externglib.Object)) externglib.SignalHandle {
-	return button.Connect("chooser-created", f)
 }

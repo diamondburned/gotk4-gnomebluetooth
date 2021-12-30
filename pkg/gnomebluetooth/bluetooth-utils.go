@@ -7,8 +7,6 @@ import (
 	"unsafe"
 )
 
-// #cgo pkg-config: gnome-bluetooth-1.0
-// #cgo CFLAGS: -Wno-deprecated-declarations
 // #include <stdlib.h>
 import "C"
 
@@ -45,6 +43,10 @@ const UUID_VDP_SOURCE = 4867
 //
 //    - appearance: bluetooth device appearance.
 //
+// The function returns the following values:
+//
+//    - typ: Type.
+//
 func AppearanceToType(appearance uint16) Type {
 	var _arg1 C.guint16       // out
 	var _cret C.BluetoothType // in
@@ -67,6 +69,10 @@ func AppearanceToType(appearance uint16) Type {
 // The function takes the following parameters:
 //
 //    - class: bluetooth device class.
+//
+// The function returns the following values:
+//
+//    - typ: Type.
 //
 func ClassToType(class uint32) Type {
 	var _arg1 C.guint32       // out
@@ -113,6 +119,10 @@ func SendToAddress(address, alias string) {
 //
 //    - typ: Type.
 //
+// The function returns the following values:
+//
+//    - utf8: string.
+//
 func TypeToFilterString(typ uint) string {
 	var _arg1 C.guint  // out
 	var _cret *C.gchar // in
@@ -137,6 +147,10 @@ func TypeToFilterString(typ uint) string {
 //
 //    - typ: Type.
 //
+// The function returns the following values:
+//
+//    - utf8: string.
+//
 func TypeToString(typ uint) string {
 	var _arg1 C.guint  // out
 	var _cret *C.gchar // in
@@ -159,6 +173,10 @@ func TypeToString(typ uint) string {
 // The function takes the following parameters:
 //
 //    - uuid: string representing a Bluetooth UUID.
+//
+// The function returns the following values:
+//
+//    - utf8: string.
 //
 func UUIDToString(uuid string) string {
 	var _arg1 *C.char // out
@@ -183,6 +201,10 @@ func UUIDToString(uuid string) string {
 // The function takes the following parameters:
 //
 //    - bdaddr: string representing a Bluetooth address.
+//
+// The function returns the following values:
+//
+//    - ok: TRUE if the address is valid, FALSE if not.
 //
 func VerifyAddress(bdaddr string) bool {
 	var _arg1 *C.char    // out

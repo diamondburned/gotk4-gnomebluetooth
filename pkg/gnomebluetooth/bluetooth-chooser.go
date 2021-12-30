@@ -11,8 +11,6 @@ import (
 	"github.com/diamondburned/gotk4/pkg/gtk/v3"
 )
 
-// #cgo pkg-config: gnome-bluetooth-1.0
-// #cgo CFLAGS: -Wno-deprecated-declarations
 // #include <stdlib.h>
 // #include <glib-object.h>
 import "C"
@@ -28,13 +26,18 @@ func init() {
 // As of right now, interface overriding and subclassing is not supported
 // yet, so the interface currently has no use.
 type ChooserOverrider interface {
+	// The function takes the following parameters:
+	//
 	SelectedDeviceActivated(address string)
+	// The function takes the following parameters:
+	//
 	SelectedDeviceChanged(address string)
 }
 
 // Chooser: <structname>BluetoothChooser</structname> struct contains only
 // private fields and should not be directly accessed.
 type Chooser struct {
+	_ [0]func() // equal guard
 	gtk.Box
 }
 
@@ -73,6 +76,11 @@ func marshalChooserer(p uintptr) (interface{}, error) {
 }
 
 // NewChooser returns a new Chooser widget.
+//
+// The function returns the following values:
+//
+//    - chooser: Chooser widget.
+//
 func NewChooser() *Chooser {
 	var _cret *C.GtkWidget // in
 
@@ -100,6 +108,11 @@ func (self *Chooser) DumpSelectedDevice() {
 // useful to set a minimum height to the chooser using
 // gtk_scrolled_window_set_min_content_height() or to join the chooser with a
 // toolbar.
+//
+// The function returns the following values:
+//
+//    - widget: ScrolledWindow object.
+//
 func (self *Chooser) ScrolledWindow() gtk.Widgetter {
 	var _arg0 *C.BluetoothChooser // out
 	var _cret *C.GtkWidget        // in
@@ -118,9 +131,13 @@ func (self *Chooser) ScrolledWindow() gtk.Widgetter {
 		}
 
 		object := externglib.Take(objptr)
-		rv, ok := (externglib.CastObject(object)).(gtk.Widgetter)
+		casted := object.WalkCast(func(obj externglib.Objector) bool {
+			_, ok := obj.(gtk.Widgetter)
+			return ok
+		})
+		rv, ok := casted.(gtk.Widgetter)
 		if !ok {
-			panic("object of type " + object.TypeFromInstance().String() + " is not gtk.Widgetter")
+			panic("no marshaler for " + object.TypeFromInstance().String() + " matching gtk.Widgetter")
 		}
 		_widget = rv
 	}
@@ -130,6 +147,11 @@ func (self *Chooser) ScrolledWindow() gtk.Widgetter {
 
 // SelectedDevice returns the Bluetooth address for the currently selected
 // device.
+//
+// The function returns the following values:
+//
+//    - utf8: bluetooth address for the currently selected device, or NULL.
+//
 func (self *Chooser) SelectedDevice() string {
 	var _arg0 *C.BluetoothChooser // out
 	var _cret *C.char             // in
@@ -149,6 +171,12 @@ func (self *Chooser) SelectedDevice() string {
 
 // SelectedDeviceIcon returns the icon name to use to represent the currently
 // selected device.
+//
+// The function returns the following values:
+//
+//    - utf8: icon name to use to represent the currently selected device, or
+//      NULL.
+//
 func (self *Chooser) SelectedDeviceIcon() string {
 	var _arg0 *C.BluetoothChooser // out
 	var _cret *C.char             // in
@@ -172,6 +200,10 @@ func (self *Chooser) SelectedDeviceIcon() string {
 //
 //    - field: identifier for the field to get data for.
 //    - value: empty #GValue to set.
+//
+// The function returns the following values:
+//
+//    - ok: TRUE if the value has been set.
 //
 func (self *Chooser) SelectedDeviceInfo(field string, value *externglib.Value) bool {
 	var _arg0 *C.BluetoothChooser // out
@@ -200,6 +232,12 @@ func (self *Chooser) SelectedDeviceInfo(field string, value *externglib.Value) b
 
 // SelectedDeviceIsConnected returns whether the selected device is connected to
 // this computer.
+//
+// The function returns the following values:
+//
+//    - ok: whether the selected device is connected to this computer, will
+//      always be FALSE if no devices are selected.
+//
 func (self *Chooser) SelectedDeviceIsConnected() bool {
 	var _arg0 *C.BluetoothChooser // out
 	var _cret C.gboolean          // in
@@ -219,6 +257,11 @@ func (self *Chooser) SelectedDeviceIsConnected() bool {
 }
 
 // SelectedDeviceName returns the name for the currently selected device.
+//
+// The function returns the following values:
+//
+//    - utf8: name for the currently selected device, or NULL.
+//
 func (self *Chooser) SelectedDeviceName() string {
 	var _arg0 *C.BluetoothChooser // out
 	var _cret *C.char             // in
@@ -237,6 +280,11 @@ func (self *Chooser) SelectedDeviceName() string {
 }
 
 // SelectedDeviceType returns the Type of the device selected.
+//
+// The function returns the following values:
+//
+//    - typ of the device selected, or '0' if unknown.
+//
 func (self *Chooser) SelectedDeviceType() Type {
 	var _arg0 *C.BluetoothChooser // out
 	var _cret C.BluetoothType     // in
@@ -276,16 +324,4 @@ func (self *Chooser) StopDiscovery() {
 
 	C.bluetooth_chooser_stop_discovery(_arg0)
 	runtime.KeepAlive(self)
-}
-
-// ConnectSelectedDeviceActivated signal is launched when a device is
-// double-clicked in the chooser.
-func (self *Chooser) ConnectSelectedDeviceActivated(f func(address string)) externglib.SignalHandle {
-	return self.Connect("selected-device-activated", f)
-}
-
-// ConnectSelectedDeviceChanged signal is launched when the selected device is
-// changed, it will be NULL if a device was unselected.
-func (self *Chooser) ConnectSelectedDeviceChanged(f func(address string)) externglib.SignalHandle {
-	return self.Connect("selected-device-changed", f)
 }

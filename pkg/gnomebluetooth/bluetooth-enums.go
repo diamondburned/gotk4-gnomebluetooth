@@ -7,8 +7,6 @@ import (
 	"strings"
 )
 
-// #cgo pkg-config: gnome-bluetooth-1.0
-// #cgo CFLAGS: -Wno-deprecated-declarations
 // #include <stdlib.h>
 import "C"
 
