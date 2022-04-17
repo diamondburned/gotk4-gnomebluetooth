@@ -12,17 +12,25 @@ import (
 
 // #include <stdlib.h>
 // #include <glib-object.h>
+// extern void _gotk4_gnomebluetooth1_ChooserCombo_ConnectChooserCreated(gpointer, GObject, guintptr);
 import "C"
+
+// glib.Type values for bluetooth-chooser-combo.go.
+var GTypeChooserCombo = externglib.Type(C.bluetooth_chooser_combo_get_type())
 
 func init() {
 	externglib.RegisterGValueMarshalers([]externglib.TypeMarshaler{
-		{T: externglib.Type(C.bluetooth_chooser_combo_get_type()), F: marshalChooserCombor},
+		{T: GTypeChooserCombo, F: marshalChooserCombo},
 	})
 }
 
 // CHOOSER_COMBO_FIRST_DEVICE: convenience value used to select the first device
 // regardless of its address.
 const CHOOSER_COMBO_FIRST_DEVICE = "00:00:00:00:00:00"
+
+// ChooserComboOverrider contains methods that are overridable.
+type ChooserComboOverrider interface {
+}
 
 type ChooserCombo struct {
 	_ [0]func() // equal guard
@@ -33,6 +41,14 @@ var (
 	_ gtk.Containerer     = (*ChooserCombo)(nil)
 	_ externglib.Objector = (*ChooserCombo)(nil)
 )
+
+func classInitChooserCombor(gclassPtr, data C.gpointer) {
+	C.g_type_class_add_private(gclassPtr, C.gsize(unsafe.Sizeof(uintptr(0))))
+
+	goffset := C.g_type_class_get_instance_private_offset(gclassPtr)
+	*(*C.gpointer)(unsafe.Add(unsafe.Pointer(gclassPtr), goffset)) = data
+
+}
 
 func wrapChooserCombo(obj *externglib.Object) *ChooserCombo {
 	return &ChooserCombo{
@@ -59,15 +75,35 @@ func wrapChooserCombo(obj *externglib.Object) *ChooserCombo {
 	}
 }
 
-func marshalChooserCombor(p uintptr) (interface{}, error) {
+func marshalChooserCombo(p uintptr) (interface{}, error) {
 	return wrapChooserCombo(externglib.ValueFromNative(unsafe.Pointer(p)).Object()), nil
+}
+
+//export _gotk4_gnomebluetooth1_ChooserCombo_ConnectChooserCreated
+func _gotk4_gnomebluetooth1_ChooserCombo_ConnectChooserCreated(arg0 C.gpointer, arg1 C.GObject, arg2 C.guintptr) {
+	var f func(chooser *externglib.Object)
+	{
+		closure := externglib.ConnectedGeneratedClosure(uintptr(arg2))
+		if closure == nil {
+			panic("given unknown closure user_data")
+		}
+		defer closure.TryRepanic()
+
+		f = closure.Func.(func(chooser *externglib.Object))
+	}
+
+	var _chooser *externglib.Object // out
+
+	_chooser = externglib.Take(unsafe.Pointer(&arg1))
+
+	f(_chooser)
 }
 
 // ConnectChooserCreated: signal is sent when a popup dialogue is created for
 // the user to select a device. This signal allows you to change the
 // configuration and filtering of the tree from its defaults.
 func (v *ChooserCombo) ConnectChooserCreated(f func(chooser *externglib.Object)) externglib.SignalHandle {
-	return v.Connect("chooser-created", f)
+	return externglib.ConnectGeneratedClosure(v, "chooser-created", false, unsafe.Pointer(C._gotk4_gnomebluetooth1_ChooserCombo_ConnectChooserCreated), f)
 }
 
 // NewChooserCombo returns a new ChooserCombo widget.

@@ -15,10 +15,17 @@ import (
 // #include <glib-object.h>
 import "C"
 
+// glib.Type values for bluetooth-filter-widget.go.
+var GTypeFilterWidget = externglib.Type(C.bluetooth_filter_widget_get_type())
+
 func init() {
 	externglib.RegisterGValueMarshalers([]externglib.TypeMarshaler{
-		{T: externglib.Type(C.bluetooth_filter_widget_get_type()), F: marshalFilterWidgetter},
+		{T: GTypeFilterWidget, F: marshalFilterWidget},
 	})
+}
+
+// FilterWidgetOverrider contains methods that are overridable.
+type FilterWidgetOverrider interface {
 }
 
 type FilterWidget struct {
@@ -30,6 +37,14 @@ var (
 	_ gtk.Containerer     = (*FilterWidget)(nil)
 	_ externglib.Objector = (*FilterWidget)(nil)
 )
+
+func classInitFilterWidgetter(gclassPtr, data C.gpointer) {
+	C.g_type_class_add_private(gclassPtr, C.gsize(unsafe.Sizeof(uintptr(0))))
+
+	goffset := C.g_type_class_get_instance_private_offset(gclassPtr)
+	*(*C.gpointer)(unsafe.Add(unsafe.Pointer(gclassPtr), goffset)) = data
+
+}
 
 func wrapFilterWidget(obj *externglib.Object) *FilterWidget {
 	return &FilterWidget{
@@ -56,7 +71,7 @@ func wrapFilterWidget(obj *externglib.Object) *FilterWidget {
 	}
 }
 
-func marshalFilterWidgetter(p uintptr) (interface{}, error) {
+func marshalFilterWidget(p uintptr) (interface{}, error) {
 	return wrapFilterWidget(externglib.ValueFromNative(unsafe.Pointer(p)).Object()), nil
 }
 
@@ -95,8 +110,8 @@ func (filter *FilterWidget) BindFilter(chooser *Chooser) {
 	var _arg0 *C.BluetoothFilterWidget // out
 	var _arg1 *C.BluetoothChooser      // out
 
-	_arg0 = (*C.BluetoothFilterWidget)(unsafe.Pointer(filter.Native()))
-	_arg1 = (*C.BluetoothChooser)(unsafe.Pointer(chooser.Native()))
+	_arg0 = (*C.BluetoothFilterWidget)(unsafe.Pointer(externglib.InternObject(filter).Native()))
+	_arg1 = (*C.BluetoothChooser)(unsafe.Pointer(externglib.InternObject(chooser).Native()))
 
 	C.bluetooth_filter_widget_bind_filter(_arg0, _arg1)
 	runtime.KeepAlive(filter)
@@ -114,7 +129,7 @@ func (filter *FilterWidget) SetTitle(title string) {
 	var _arg0 *C.BluetoothFilterWidget // out
 	var _arg1 *C.gchar                 // out
 
-	_arg0 = (*C.BluetoothFilterWidget)(unsafe.Pointer(filter.Native()))
+	_arg0 = (*C.BluetoothFilterWidget)(unsafe.Pointer(externglib.InternObject(filter).Native()))
 	_arg1 = (*C.gchar)(unsafe.Pointer(C.CString(title)))
 	defer C.free(unsafe.Pointer(_arg1))
 

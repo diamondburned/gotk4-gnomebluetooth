@@ -13,12 +13,21 @@ import (
 
 // #include <stdlib.h>
 // #include <glib-object.h>
+// extern void _gotk4_gnomebluetooth1_SettingsWidget_ConnectAdapterStatusChanged(gpointer, guintptr);
+// extern void _gotk4_gnomebluetooth1_SettingsWidget_ConnectPanelChanged(gpointer, gchar*, guintptr);
 import "C"
+
+// glib.Type values for bluetooth-settings-widget.go.
+var GTypeSettingsWidget = externglib.Type(C.bluetooth_settings_widget_get_type())
 
 func init() {
 	externglib.RegisterGValueMarshalers([]externglib.TypeMarshaler{
-		{T: externglib.Type(C.bluetooth_settings_widget_get_type()), F: marshalSettingsWidgetter},
+		{T: GTypeSettingsWidget, F: marshalSettingsWidget},
 	})
+}
+
+// SettingsWidgetOverrider contains methods that are overridable.
+type SettingsWidgetOverrider interface {
 }
 
 // SettingsWidget: <structname>BluetoothSettingsWidget</structname> struct
@@ -32,6 +41,14 @@ var (
 	_ gtk.Containerer     = (*SettingsWidget)(nil)
 	_ externglib.Objector = (*SettingsWidget)(nil)
 )
+
+func classInitSettingsWidgetter(gclassPtr, data C.gpointer) {
+	C.g_type_class_add_private(gclassPtr, C.gsize(unsafe.Sizeof(uintptr(0))))
+
+	goffset := C.g_type_class_get_instance_private_offset(gclassPtr)
+	*(*C.gpointer)(unsafe.Add(unsafe.Pointer(gclassPtr), goffset)) = data
+
+}
 
 func wrapSettingsWidget(obj *externglib.Object) *SettingsWidget {
 	return &SettingsWidget{
@@ -58,8 +75,56 @@ func wrapSettingsWidget(obj *externglib.Object) *SettingsWidget {
 	}
 }
 
-func marshalSettingsWidgetter(p uintptr) (interface{}, error) {
+func marshalSettingsWidget(p uintptr) (interface{}, error) {
 	return wrapSettingsWidget(externglib.ValueFromNative(unsafe.Pointer(p)).Object()), nil
+}
+
+//export _gotk4_gnomebluetooth1_SettingsWidget_ConnectAdapterStatusChanged
+func _gotk4_gnomebluetooth1_SettingsWidget_ConnectAdapterStatusChanged(arg0 C.gpointer, arg1 C.guintptr) {
+	var f func()
+	{
+		closure := externglib.ConnectedGeneratedClosure(uintptr(arg1))
+		if closure == nil {
+			panic("given unknown closure user_data")
+		}
+		defer closure.TryRepanic()
+
+		f = closure.Func.(func())
+	}
+
+	f()
+}
+
+// ConnectAdapterStatusChanged signal is launched when the status of the adapter
+// changes (powered, available, etc.).
+func (widget *SettingsWidget) ConnectAdapterStatusChanged(f func()) externglib.SignalHandle {
+	return externglib.ConnectGeneratedClosure(widget, "adapter-status-changed", false, unsafe.Pointer(C._gotk4_gnomebluetooth1_SettingsWidget_ConnectAdapterStatusChanged), f)
+}
+
+//export _gotk4_gnomebluetooth1_SettingsWidget_ConnectPanelChanged
+func _gotk4_gnomebluetooth1_SettingsWidget_ConnectPanelChanged(arg0 C.gpointer, arg1 *C.gchar, arg2 C.guintptr) {
+	var f func(panel string)
+	{
+		closure := externglib.ConnectedGeneratedClosure(uintptr(arg2))
+		if closure == nil {
+			panic("given unknown closure user_data")
+		}
+		defer closure.TryRepanic()
+
+		f = closure.Func.(func(panel string))
+	}
+
+	var _panel string // out
+
+	_panel = C.GoString((*C.gchar)(unsafe.Pointer(arg1)))
+
+	f(_panel)
+}
+
+// ConnectPanelChanged signal is launched when a link to another settings panel
+// is clicked.
+func (widget *SettingsWidget) ConnectPanelChanged(f func(panel string)) externglib.SignalHandle {
+	return externglib.ConnectGeneratedClosure(widget, "panel-changed", false, unsafe.Pointer(C._gotk4_gnomebluetooth1_SettingsWidget_ConnectPanelChanged), f)
 }
 
 // NewSettingsWidget returns a new SettingsWidget widget.
@@ -88,7 +153,7 @@ func (widget *SettingsWidget) DefaultAdapterPowered() bool {
 	var _arg0 *C.BluetoothSettingsWidget // out
 	var _cret C.gboolean                 // in
 
-	_arg0 = (*C.BluetoothSettingsWidget)(unsafe.Pointer(widget.Native()))
+	_arg0 = (*C.BluetoothSettingsWidget)(unsafe.Pointer(externglib.InternObject(widget).Native()))
 
 	_cret = C.bluetooth_settings_widget_get_default_adapter_powered(_arg0)
 	runtime.KeepAlive(widget)

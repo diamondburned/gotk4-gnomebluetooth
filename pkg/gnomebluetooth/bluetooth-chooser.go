@@ -7,24 +7,29 @@ import (
 	"unsafe"
 
 	"github.com/diamondburned/gotk4/pkg/atk"
+	"github.com/diamondburned/gotk4/pkg/core/gbox"
 	externglib "github.com/diamondburned/gotk4/pkg/core/glib"
 	"github.com/diamondburned/gotk4/pkg/gtk/v3"
 )
 
 // #include <stdlib.h>
 // #include <glib-object.h>
+// extern void _gotk4_gnomebluetooth1_ChooserClass_selected_device_activated(BluetoothChooser*, char*);
+// extern void _gotk4_gnomebluetooth1_ChooserClass_selected_device_changed(BluetoothChooser*, char*);
+// extern void _gotk4_gnomebluetooth1_Chooser_ConnectSelectedDeviceActivated(gpointer, gchar*, guintptr);
+// extern void _gotk4_gnomebluetooth1_Chooser_ConnectSelectedDeviceChanged(gpointer, gchar*, guintptr);
 import "C"
+
+// glib.Type values for bluetooth-chooser.go.
+var GTypeChooser = externglib.Type(C.bluetooth_chooser_get_type())
 
 func init() {
 	externglib.RegisterGValueMarshalers([]externglib.TypeMarshaler{
-		{T: externglib.Type(C.bluetooth_chooser_get_type()), F: marshalChooserer},
+		{T: GTypeChooser, F: marshalChooser},
 	})
 }
 
 // ChooserOverrider contains methods that are overridable.
-//
-// As of right now, interface overriding and subclassing is not supported
-// yet, so the interface currently has no use.
 type ChooserOverrider interface {
 	// The function takes the following parameters:
 	//
@@ -45,6 +50,50 @@ var (
 	_ gtk.Containerer     = (*Chooser)(nil)
 	_ externglib.Objector = (*Chooser)(nil)
 )
+
+func classInitChooserer(gclassPtr, data C.gpointer) {
+	C.g_type_class_add_private(gclassPtr, C.gsize(unsafe.Sizeof(uintptr(0))))
+
+	goffset := C.g_type_class_get_instance_private_offset(gclassPtr)
+	*(*C.gpointer)(unsafe.Add(unsafe.Pointer(gclassPtr), goffset)) = data
+
+	goval := gbox.Get(uintptr(data))
+	pclass := (*C.BluetoothChooserClass)(unsafe.Pointer(gclassPtr))
+	// gclass := (*C.GTypeClass)(unsafe.Pointer(gclassPtr))
+	// pclass := (*C.BluetoothChooserClass)(unsafe.Pointer(C.g_type_class_peek_parent(gclass)))
+
+	if _, ok := goval.(interface{ SelectedDeviceActivated(address string) }); ok {
+		pclass.selected_device_activated = (*[0]byte)(C._gotk4_gnomebluetooth1_ChooserClass_selected_device_activated)
+	}
+
+	if _, ok := goval.(interface{ SelectedDeviceChanged(address string) }); ok {
+		pclass.selected_device_changed = (*[0]byte)(C._gotk4_gnomebluetooth1_ChooserClass_selected_device_changed)
+	}
+}
+
+//export _gotk4_gnomebluetooth1_ChooserClass_selected_device_activated
+func _gotk4_gnomebluetooth1_ChooserClass_selected_device_activated(arg0 *C.BluetoothChooser, arg1 *C.char) {
+	goval := externglib.GoPrivateFromObject(unsafe.Pointer(arg0))
+	iface := goval.(interface{ SelectedDeviceActivated(address string) })
+
+	var _address string // out
+
+	_address = C.GoString((*C.gchar)(unsafe.Pointer(arg1)))
+
+	iface.SelectedDeviceActivated(_address)
+}
+
+//export _gotk4_gnomebluetooth1_ChooserClass_selected_device_changed
+func _gotk4_gnomebluetooth1_ChooserClass_selected_device_changed(arg0 *C.BluetoothChooser, arg1 *C.char) {
+	goval := externglib.GoPrivateFromObject(unsafe.Pointer(arg0))
+	iface := goval.(interface{ SelectedDeviceChanged(address string) })
+
+	var _address string // out
+
+	_address = C.GoString((*C.gchar)(unsafe.Pointer(arg1)))
+
+	iface.SelectedDeviceChanged(_address)
+}
 
 func wrapChooser(obj *externglib.Object) *Chooser {
 	return &Chooser{
@@ -71,8 +120,60 @@ func wrapChooser(obj *externglib.Object) *Chooser {
 	}
 }
 
-func marshalChooserer(p uintptr) (interface{}, error) {
+func marshalChooser(p uintptr) (interface{}, error) {
 	return wrapChooser(externglib.ValueFromNative(unsafe.Pointer(p)).Object()), nil
+}
+
+//export _gotk4_gnomebluetooth1_Chooser_ConnectSelectedDeviceActivated
+func _gotk4_gnomebluetooth1_Chooser_ConnectSelectedDeviceActivated(arg0 C.gpointer, arg1 *C.gchar, arg2 C.guintptr) {
+	var f func(address string)
+	{
+		closure := externglib.ConnectedGeneratedClosure(uintptr(arg2))
+		if closure == nil {
+			panic("given unknown closure user_data")
+		}
+		defer closure.TryRepanic()
+
+		f = closure.Func.(func(address string))
+	}
+
+	var _address string // out
+
+	_address = C.GoString((*C.gchar)(unsafe.Pointer(arg1)))
+
+	f(_address)
+}
+
+// ConnectSelectedDeviceActivated signal is launched when a device is
+// double-clicked in the chooser.
+func (self *Chooser) ConnectSelectedDeviceActivated(f func(address string)) externglib.SignalHandle {
+	return externglib.ConnectGeneratedClosure(self, "selected-device-activated", false, unsafe.Pointer(C._gotk4_gnomebluetooth1_Chooser_ConnectSelectedDeviceActivated), f)
+}
+
+//export _gotk4_gnomebluetooth1_Chooser_ConnectSelectedDeviceChanged
+func _gotk4_gnomebluetooth1_Chooser_ConnectSelectedDeviceChanged(arg0 C.gpointer, arg1 *C.gchar, arg2 C.guintptr) {
+	var f func(address string)
+	{
+		closure := externglib.ConnectedGeneratedClosure(uintptr(arg2))
+		if closure == nil {
+			panic("given unknown closure user_data")
+		}
+		defer closure.TryRepanic()
+
+		f = closure.Func.(func(address string))
+	}
+
+	var _address string // out
+
+	_address = C.GoString((*C.gchar)(unsafe.Pointer(arg1)))
+
+	f(_address)
+}
+
+// ConnectSelectedDeviceChanged signal is launched when the selected device is
+// changed, it will be NULL if a device was unselected.
+func (self *Chooser) ConnectSelectedDeviceChanged(f func(address string)) externglib.SignalHandle {
+	return externglib.ConnectGeneratedClosure(self, "selected-device-changed", false, unsafe.Pointer(C._gotk4_gnomebluetooth1_Chooser_ConnectSelectedDeviceChanged), f)
 }
 
 // NewChooser returns a new Chooser widget.
@@ -98,7 +199,7 @@ func NewChooser() *Chooser {
 func (self *Chooser) DumpSelectedDevice() {
 	var _arg0 *C.BluetoothChooser // out
 
-	_arg0 = (*C.BluetoothChooser)(unsafe.Pointer(self.Native()))
+	_arg0 = (*C.BluetoothChooser)(unsafe.Pointer(externglib.InternObject(self).Native()))
 
 	C.bluetooth_chooser_dump_selected_device(_arg0)
 	runtime.KeepAlive(self)
@@ -117,7 +218,7 @@ func (self *Chooser) ScrolledWindow() gtk.Widgetter {
 	var _arg0 *C.BluetoothChooser // out
 	var _cret *C.GtkWidget        // in
 
-	_arg0 = (*C.BluetoothChooser)(unsafe.Pointer(self.Native()))
+	_arg0 = (*C.BluetoothChooser)(unsafe.Pointer(externglib.InternObject(self).Native()))
 
 	_cret = C.bluetooth_chooser_get_scrolled_window(_arg0)
 	runtime.KeepAlive(self)
@@ -156,7 +257,7 @@ func (self *Chooser) SelectedDevice() string {
 	var _arg0 *C.BluetoothChooser // out
 	var _cret *C.char             // in
 
-	_arg0 = (*C.BluetoothChooser)(unsafe.Pointer(self.Native()))
+	_arg0 = (*C.BluetoothChooser)(unsafe.Pointer(externglib.InternObject(self).Native()))
 
 	_cret = C.bluetooth_chooser_get_selected_device(_arg0)
 	runtime.KeepAlive(self)
@@ -181,7 +282,7 @@ func (self *Chooser) SelectedDeviceIcon() string {
 	var _arg0 *C.BluetoothChooser // out
 	var _cret *C.char             // in
 
-	_arg0 = (*C.BluetoothChooser)(unsafe.Pointer(self.Native()))
+	_arg0 = (*C.BluetoothChooser)(unsafe.Pointer(externglib.InternObject(self).Native()))
 
 	_cret = C.bluetooth_chooser_get_selected_device_icon(_arg0)
 	runtime.KeepAlive(self)
@@ -211,7 +312,7 @@ func (self *Chooser) SelectedDeviceInfo(field string, value *externglib.Value) b
 	var _arg2 *C.GValue           // out
 	var _cret C.gboolean          // in
 
-	_arg0 = (*C.BluetoothChooser)(unsafe.Pointer(self.Native()))
+	_arg0 = (*C.BluetoothChooser)(unsafe.Pointer(externglib.InternObject(self).Native()))
 	_arg1 = (*C.char)(unsafe.Pointer(C.CString(field)))
 	defer C.free(unsafe.Pointer(_arg1))
 	_arg2 = (*C.GValue)(unsafe.Pointer(value.Native()))
@@ -242,7 +343,7 @@ func (self *Chooser) SelectedDeviceIsConnected() bool {
 	var _arg0 *C.BluetoothChooser // out
 	var _cret C.gboolean          // in
 
-	_arg0 = (*C.BluetoothChooser)(unsafe.Pointer(self.Native()))
+	_arg0 = (*C.BluetoothChooser)(unsafe.Pointer(externglib.InternObject(self).Native()))
 
 	_cret = C.bluetooth_chooser_get_selected_device_is_connected(_arg0)
 	runtime.KeepAlive(self)
@@ -266,7 +367,7 @@ func (self *Chooser) SelectedDeviceName() string {
 	var _arg0 *C.BluetoothChooser // out
 	var _cret *C.char             // in
 
-	_arg0 = (*C.BluetoothChooser)(unsafe.Pointer(self.Native()))
+	_arg0 = (*C.BluetoothChooser)(unsafe.Pointer(externglib.InternObject(self).Native()))
 
 	_cret = C.bluetooth_chooser_get_selected_device_name(_arg0)
 	runtime.KeepAlive(self)
@@ -289,7 +390,7 @@ func (self *Chooser) SelectedDeviceType() Type {
 	var _arg0 *C.BluetoothChooser // out
 	var _cret C.BluetoothType     // in
 
-	_arg0 = (*C.BluetoothChooser)(unsafe.Pointer(self.Native()))
+	_arg0 = (*C.BluetoothChooser)(unsafe.Pointer(externglib.InternObject(self).Native()))
 
 	_cret = C.bluetooth_chooser_get_selected_device_type(_arg0)
 	runtime.KeepAlive(self)
@@ -309,7 +410,7 @@ func (self *Chooser) SelectedDeviceType() Type {
 func (self *Chooser) StartDiscovery() {
 	var _arg0 *C.BluetoothChooser // out
 
-	_arg0 = (*C.BluetoothChooser)(unsafe.Pointer(self.Native()))
+	_arg0 = (*C.BluetoothChooser)(unsafe.Pointer(externglib.InternObject(self).Native()))
 
 	C.bluetooth_chooser_start_discovery(_arg0)
 	runtime.KeepAlive(self)
@@ -320,7 +421,7 @@ func (self *Chooser) StartDiscovery() {
 func (self *Chooser) StopDiscovery() {
 	var _arg0 *C.BluetoothChooser // out
 
-	_arg0 = (*C.BluetoothChooser)(unsafe.Pointer(self.Native()))
+	_arg0 = (*C.BluetoothChooser)(unsafe.Pointer(externglib.InternObject(self).Native()))
 
 	C.bluetooth_chooser_stop_discovery(_arg0)
 	runtime.KeepAlive(self)

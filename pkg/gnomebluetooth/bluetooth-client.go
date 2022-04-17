@@ -17,15 +17,23 @@ import (
 
 // #include <stdlib.h>
 // #include <glib-object.h>
+// extern gboolean _gotk4_gtk3_TreeModelFilterVisibleFunc(GtkTreeModel*, GtkTreeIter*, gpointer);
+// extern void _gotk4_gio2_AsyncReadyCallback(GObject*, GAsyncResult*, gpointer);
+// extern void _gotk4_gnomebluetooth1_Client_ConnectDeviceRemoved(gpointer, gchar*, guintptr);
 // extern void callbackDelete(gpointer);
-// gboolean _gotk4_gtk3_TreeModelFilterVisibleFunc(GtkTreeModel*, GtkTreeIter*, gpointer);
-// void _gotk4_gio2_AsyncReadyCallback(GObject*, GAsyncResult*, gpointer);
 import "C"
+
+// glib.Type values for bluetooth-client.go.
+var GTypeClient = externglib.Type(C.bluetooth_client_get_type())
 
 func init() {
 	externglib.RegisterGValueMarshalers([]externglib.TypeMarshaler{
-		{T: externglib.Type(C.bluetooth_client_get_type()), F: marshalClienter},
+		{T: GTypeClient, F: marshalClient},
 	})
+}
+
+// ClientOverrider contains methods that are overridable.
+type ClientOverrider interface {
 }
 
 // Client: <structname>BluetoothClient</structname> struct contains only private
@@ -39,14 +47,48 @@ var (
 	_ externglib.Objector = (*Client)(nil)
 )
 
+func classInitClienter(gclassPtr, data C.gpointer) {
+	C.g_type_class_add_private(gclassPtr, C.gsize(unsafe.Sizeof(uintptr(0))))
+
+	goffset := C.g_type_class_get_instance_private_offset(gclassPtr)
+	*(*C.gpointer)(unsafe.Add(unsafe.Pointer(gclassPtr), goffset)) = data
+
+}
+
 func wrapClient(obj *externglib.Object) *Client {
 	return &Client{
 		Object: obj,
 	}
 }
 
-func marshalClienter(p uintptr) (interface{}, error) {
+func marshalClient(p uintptr) (interface{}, error) {
 	return wrapClient(externglib.ValueFromNative(unsafe.Pointer(p)).Object()), nil
+}
+
+//export _gotk4_gnomebluetooth1_Client_ConnectDeviceRemoved
+func _gotk4_gnomebluetooth1_Client_ConnectDeviceRemoved(arg0 C.gpointer, arg1 *C.gchar, arg2 C.guintptr) {
+	var f func(device string)
+	{
+		closure := externglib.ConnectedGeneratedClosure(uintptr(arg2))
+		if closure == nil {
+			panic("given unknown closure user_data")
+		}
+		defer closure.TryRepanic()
+
+		f = closure.Func.(func(device string))
+	}
+
+	var _device string // out
+
+	_device = C.GoString((*C.gchar)(unsafe.Pointer(arg1)))
+
+	f(_device)
+}
+
+// ConnectDeviceRemoved signal is launched when a device gets removed from the
+// model.
+func (client *Client) ConnectDeviceRemoved(f func(device string)) externglib.SignalHandle {
+	return externglib.ConnectGeneratedClosure(client, "device-removed", false, unsafe.Pointer(C._gotk4_gnomebluetooth1_Client_ConnectDeviceRemoved), f)
 }
 
 // NewClient returns a reference to the Client singleton. Use g_object_unref()
@@ -87,7 +129,7 @@ func (client *Client) ConnectService(ctx context.Context, path string, connect b
 	var _arg4 C.GAsyncReadyCallback // out
 	var _arg5 C.gpointer
 
-	_arg0 = (*C.BluetoothClient)(unsafe.Pointer(client.Native()))
+	_arg0 = (*C.BluetoothClient)(unsafe.Pointer(externglib.InternObject(client).Native()))
 	{
 		cancellable := gcancel.GCancellableFromContext(ctx)
 		defer runtime.KeepAlive(cancellable)
@@ -123,8 +165,8 @@ func (client *Client) ConnectServiceFinish(res gio.AsyncResulter) error {
 	var _arg1 *C.GAsyncResult    // out
 	var _cerr *C.GError          // in
 
-	_arg0 = (*C.BluetoothClient)(unsafe.Pointer(client.Native()))
-	_arg1 = (*C.GAsyncResult)(unsafe.Pointer(res.Native()))
+	_arg0 = (*C.BluetoothClient)(unsafe.Pointer(externglib.InternObject(client).Native()))
+	_arg1 = (*C.GAsyncResult)(unsafe.Pointer(externglib.InternObject(res).Native()))
 
 	C.bluetooth_client_connect_service_finish(_arg0, _arg1, &_cerr)
 	runtime.KeepAlive(client)
@@ -145,33 +187,22 @@ func (client *Client) ConnectServiceFinish(res gio.AsyncResulter) error {
 //
 //    - treeModel: TreeModel object.
 //
-func (client *Client) AdapterModel() gtk.TreeModeller {
+func (client *Client) AdapterModel() *gtk.TreeModel {
 	var _arg0 *C.BluetoothClient // out
 	var _cret *C.GtkTreeModel    // in
 
-	_arg0 = (*C.BluetoothClient)(unsafe.Pointer(client.Native()))
+	_arg0 = (*C.BluetoothClient)(unsafe.Pointer(externglib.InternObject(client).Native()))
 
 	_cret = C.bluetooth_client_get_adapter_model(_arg0)
 	runtime.KeepAlive(client)
 
-	var _treeModel gtk.TreeModeller // out
+	var _treeModel *gtk.TreeModel // out
 
 	{
-		objptr := unsafe.Pointer(_cret)
-		if objptr == nil {
-			panic("object of type gtk.TreeModeller is nil")
+		obj := externglib.AssumeOwnership(unsafe.Pointer(_cret))
+		_treeModel = &gtk.TreeModel{
+			Object: obj,
 		}
-
-		object := externglib.AssumeOwnership(objptr)
-		casted := object.WalkCast(func(obj externglib.Objector) bool {
-			_, ok := obj.(gtk.TreeModeller)
-			return ok
-		})
-		rv, ok := casted.(gtk.TreeModeller)
-		if !ok {
-			panic("no marshaler for " + object.TypeFromInstance().String() + " matching gtk.TreeModeller")
-		}
-		_treeModel = rv
 	}
 
 	return _treeModel
@@ -187,33 +218,22 @@ func (client *Client) AdapterModel() gtk.TreeModeller {
 //
 //    - treeModel: TreeModel object.
 //
-func (client *Client) DeviceModel() gtk.TreeModeller {
+func (client *Client) DeviceModel() *gtk.TreeModel {
 	var _arg0 *C.BluetoothClient // out
 	var _cret *C.GtkTreeModel    // in
 
-	_arg0 = (*C.BluetoothClient)(unsafe.Pointer(client.Native()))
+	_arg0 = (*C.BluetoothClient)(unsafe.Pointer(externglib.InternObject(client).Native()))
 
 	_cret = C.bluetooth_client_get_device_model(_arg0)
 	runtime.KeepAlive(client)
 
-	var _treeModel gtk.TreeModeller // out
+	var _treeModel *gtk.TreeModel // out
 
 	{
-		objptr := unsafe.Pointer(_cret)
-		if objptr == nil {
-			panic("object of type gtk.TreeModeller is nil")
+		obj := externglib.AssumeOwnership(unsafe.Pointer(_cret))
+		_treeModel = &gtk.TreeModel{
+			Object: obj,
 		}
-
-		object := externglib.AssumeOwnership(objptr)
-		casted := object.WalkCast(func(obj externglib.Objector) bool {
-			_, ok := obj.(gtk.TreeModeller)
-			return ok
-		})
-		rv, ok := casted.(gtk.TreeModeller)
-		if !ok {
-			panic("no marshaler for " + object.TypeFromInstance().String() + " matching gtk.TreeModeller")
-		}
-		_treeModel = rv
 	}
 
 	return _treeModel
@@ -231,14 +251,14 @@ func (client *Client) DeviceModel() gtk.TreeModeller {
 //
 //    - treeModel: TreeModel object.
 //
-func (client *Client) FilterModel(fn gtk.TreeModelFilterVisibleFunc) gtk.TreeModeller {
+func (client *Client) FilterModel(fn gtk.TreeModelFilterVisibleFunc) *gtk.TreeModel {
 	var _arg0 *C.BluetoothClient              // out
 	var _arg1 C.GtkTreeModelFilterVisibleFunc // out
 	var _arg2 C.gpointer
 	var _arg3 C.GDestroyNotify
 	var _cret *C.GtkTreeModel // in
 
-	_arg0 = (*C.BluetoothClient)(unsafe.Pointer(client.Native()))
+	_arg0 = (*C.BluetoothClient)(unsafe.Pointer(externglib.InternObject(client).Native()))
 	_arg1 = (*[0]byte)(C._gotk4_gtk3_TreeModelFilterVisibleFunc)
 	_arg2 = C.gpointer(gbox.Assign(fn))
 	_arg3 = (C.GDestroyNotify)((*[0]byte)(C.callbackDelete))
@@ -247,24 +267,13 @@ func (client *Client) FilterModel(fn gtk.TreeModelFilterVisibleFunc) gtk.TreeMod
 	runtime.KeepAlive(client)
 	runtime.KeepAlive(fn)
 
-	var _treeModel gtk.TreeModeller // out
+	var _treeModel *gtk.TreeModel // out
 
 	{
-		objptr := unsafe.Pointer(_cret)
-		if objptr == nil {
-			panic("object of type gtk.TreeModeller is nil")
+		obj := externglib.AssumeOwnership(unsafe.Pointer(_cret))
+		_treeModel = &gtk.TreeModel{
+			Object: obj,
 		}
-
-		object := externglib.AssumeOwnership(objptr)
-		casted := object.WalkCast(func(obj externglib.Objector) bool {
-			_, ok := obj.(gtk.TreeModeller)
-			return ok
-		})
-		rv, ok := casted.(gtk.TreeModeller)
-		if !ok {
-			panic("no marshaler for " + object.TypeFromInstance().String() + " matching gtk.TreeModeller")
-		}
-		_treeModel = rv
 	}
 
 	return _treeModel
@@ -277,33 +286,22 @@ func (client *Client) FilterModel(fn gtk.TreeModelFilterVisibleFunc) gtk.TreeMod
 //
 //    - treeModel: TreeModel object.
 //
-func (client *Client) Model() gtk.TreeModeller {
+func (client *Client) Model() *gtk.TreeModel {
 	var _arg0 *C.BluetoothClient // out
 	var _cret *C.GtkTreeModel    // in
 
-	_arg0 = (*C.BluetoothClient)(unsafe.Pointer(client.Native()))
+	_arg0 = (*C.BluetoothClient)(unsafe.Pointer(externglib.InternObject(client).Native()))
 
 	_cret = C.bluetooth_client_get_model(_arg0)
 	runtime.KeepAlive(client)
 
-	var _treeModel gtk.TreeModeller // out
+	var _treeModel *gtk.TreeModel // out
 
 	{
-		objptr := unsafe.Pointer(_cret)
-		if objptr == nil {
-			panic("object of type gtk.TreeModeller is nil")
+		obj := externglib.AssumeOwnership(unsafe.Pointer(_cret))
+		_treeModel = &gtk.TreeModel{
+			Object: obj,
 		}
-
-		object := externglib.AssumeOwnership(objptr)
-		casted := object.WalkCast(func(obj externglib.Objector) bool {
-			_, ok := obj.(gtk.TreeModeller)
-			return ok
-		})
-		rv, ok := casted.(gtk.TreeModeller)
-		if !ok {
-			panic("no marshaler for " + object.TypeFromInstance().String() + " matching gtk.TreeModeller")
-		}
-		_treeModel = rv
 	}
 
 	return _treeModel
